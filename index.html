@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lonsk1 • Portfolio</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- GSAP & ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-dark: #06070a;
+      --accent-blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #e5e7eb;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      overflow-x: hidden;
+      min-height: 230vh;
+    }
+
+    /* Grille technique en arrière-plan */
+    .bg-grid-pattern {
+      background-size: 42px 42px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Conteneur fixe toujours centré sur l'écran */
+    #nav-container {
+      position: fixed;
+      top: 1.15rem;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      padding: 0 1rem;
+      pointer-events: none;
+    }
+
+    /* 
+      ÉTAT 1 : TOUT EN HAUT (NON SCROLLÉ)
+      - AUCUNE BULLE, AUCUN FOND, AUCUNE BORDURE, AUCUN BLUR.
+      - 100 % transparent, étiré en justify-between sur la largeur du site.
+    */
+    .nav-bar {
+      width: min(1200px, 92vw);
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0.5rem;
+      
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-radius: 9999px;
+      pointer-events: auto;
+      
+      /* Accélération matérielle GPU */
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: width, background-color, border-color, box-shadow, padding;
+      
+      transition: 
+        width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+        padding 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.35s ease,
+        border-color 0.35s ease,
+        box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+        backdrop-filter 0.35s ease,
+        -webkit-backdrop-filter 0.35s ease;
+    }
+
+    /* Bloc logo à gauche */
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    /* Puce ronde d'orfèvre : 34x34px fixe */
+    .brand-bullet {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.32);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, background 0.25s ease;
+      cursor: pointer;
+    }
+
+    .brand-bullet:hover {
+      transform: scale(1.06);
+      border-color: rgba(59, 130, 246, 0.65);
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    /* Diode bleue rigoureusement centrée au millimètre */
+    .brand-dot {
+      width: 7px;
+      height: 7px;
+      min-width: 7px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 8px #3b82f6, 0 0 14px rgba(59, 130, 246, 0.8);
+      display: block;
+    }
+
+    /* Conteneur animé pour le texte du logo : zéro saccade, zéro marge résiduelle */
+    .brand-text-wrap {
+      overflow: hidden;
+      max-width: 140px;
+      margin-left: 0.65rem;
+      opacity: 1;
+      transform: translateX(0);
+      will-change: max-width, opacity, margin-left, transform;
+      transition: 
+        max-width 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+        margin-left 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.3s ease,
+        transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .brand-name {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      display: block;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+      transition: gap 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-links-wrap {
+      display: flex;
+      align-items: center;
+      position: relative;
+      gap: 0.25rem;
+      transition: gap 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-link-item {
+      position: relative;
+      z-index: 2;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8125rem;
+      color: #a1a1aa;
+      font-weight: 500;
+      transition: color 0.2s ease, padding 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+      text-decoration: none;
+    }
+
+    .nav-link-item:hover {
+      color: #ffffff;
+    }
+
+    /* Curseur magnétique suiveur (Sliding Pill) */
+    #sliding-pill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 1;
+      will-change: transform, width, opacity;
+      transition: 
+        transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        width 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.18s ease;
+    }
+
+    /* Bouton d'action CTA à reflet spéculaire (Shimmer) */
+    .btn-lux-shimmer {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 0.45rem 1.05rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    /* Rayon de lumière spéculaire qui balaye en biais au survol */
+    .btn-lux-shimmer::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -120%;
+      width: 60%;
+      height: 200%;
+      background: linear-gradient(
+        75deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 30%,
+        rgba(255, 255, 255, 0.75) 50%,
+        rgba(255, 255, 255, 0.15) 70%,
+        transparent 100%
+      );
+      transform: rotate(25deg);
+      pointer-events: none;
+      transition: left 0.75s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .btn-lux-shimmer:hover {
+      border-color: rgba(255, 255, 255, 0.55);
+      box-shadow: 0 0 26px rgba(59, 130, 246, 0.8), 0 4px 12px rgba(37, 99, 235, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+      transform: translateY(-1.5px) scale(1.02);
+    }
+
+    .btn-lux-shimmer:hover::before {
+      left: 160%;
+    }
+
+    .btn-lux-shimmer:active {
+      transform: translateY(0px) scale(0.98);
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+    }
+
+    /* 
+      ÉTAT 2 : SCROLLÉ (LA BULLE COMPACTE APPARAÎT SEULEMENT ICI)
+    */
+    .nav-bar.scrolled {
+      width: 350px;
+      background: rgba(14, 17, 26, 0.88) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(18px) !important;
+      -webkit-backdrop-filter: blur(18px) !important;
+      box-shadow: 
+        0 16px 36px -10px rgba(0, 0, 0, 0.85),
+        0 0 24px -6px rgba(59, 130, 246, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+      gap: 0.5rem;
+    }
+
+    .nav-bar.scrolled .brand-text-wrap {
+      max-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      opacity: 0 !important;
+      transform: translateX(-8px);
+      pointer-events: none;
+    }
+
+    .nav-bar.scrolled .nav-actions {
+      gap: 0.5rem;
+    }
+
+    .nav-bar.scrolled .nav-links-wrap {
+      gap: 0.25rem;
+    }
+
+    .nav-bar.scrolled .nav-link-item {
+      padding: 0.35rem 0.55rem;
+    }
+
+    /* Effet Spotlight Glow interactif */
+    .spotlight-card {
+      position: relative;
+      background: rgba(14, 17, 26, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+      overflow: hidden;
+      border-radius: 1.25rem;
+    }
+
+    .spotlight-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        420px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(59, 130, 246, 0.16),
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .spotlight-card:hover::before {
+      opacity: 1;
+    }
+
+    .spotlight-card:hover {
+      border-color: rgba(59, 130, 246, 0.38);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.65);
+    }
+
+    /* Modal Animation */
+    #project-modal {
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    #project-modal.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #project-modal:not(.hidden) {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    #modal-card {
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #project-modal.hidden #modal-card {
+      transform: scale(0.96) translateY(12px);
+    }
+    #project-modal:not(.hidden) #modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    /* Scrollbar modale */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+    }
+
+    @media (max-width: 640px) {
+      #nav-container {
+        padding: 0 0.5rem;
+      }
+      .nav-bar {
+        width: 350px !important;
+        padding: 5px 6px !important;
+        background: rgba(14, 17, 26, 0.88);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      .brand-text-wrap {
+        display: none !important;
+      }
+      .nav-link-item {
+        padding: 0.35rem 0.55rem;
+        font-size: 0.75rem;
+      }
+    }
+
+  </style>
+</head>
+<body class="bg-grid-pattern selection:bg-blue-600 selection:text-white relative">
+
+  <!-- Canvas pour étoiles réalistes & étoiles filantes -->
+  <canvas id="space-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <!-- NAVIGATION FIXE INTERACTIVE -->
+  <header id="nav-container">
+    <nav id="main-nav" class="nav-bar">
+      
+      <!-- LOGO ET POINT BLEU D'ORFÈVRE -->
+      <a href="#" id="brand-link" class="nav-brand" title="Retour tout en haut">
+        <div class="brand-bullet">
+          <span class="brand-dot"></span>
+        </div>
+        <div class="brand-text-wrap">
+          <span class="brand-name">Lonski</span>
+        </div>
+      </a>
+
+      <!-- LIENS + BOUTON SHIMMER -->
+      <div class="nav-actions">
+        <div class="nav-links-wrap" id="nav-links-box">
+          <div id="sliding-pill"></div>
+          <a href="#projets" class="nav-link-item">Réalisations</a>
+          <a href="#retours" class="nav-link-item">Retours</a>
+        </div>
+
+        <a href="#contact" id="btn-contact" class="btn-lux-shimmer">
+          Me contacter
+        </a>
+      </div>
+
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative z-10 min-h-[70vh] flex flex-col justify-center items-center text-center px-4 pt-24 max-w-6xl mx-auto">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/20 bg-blue-500/10 text-xs text-blue-300 font-mono mb-6">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      Développeur Indépendant • Polyvalent
+    </div>
+
+    <h1 class="font-extrabold tracking-tight text-white mb-6" style="font-size: clamp(1.2rem, 5.1vw, 3.75rem); line-height: 1.15;">
+      <span class="whitespace-nowrap inline-block">Du script au logiciel complet</span><br />
+      <span class="whitespace-nowrap inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-zinc-400">
+        Je crée ce dont vous avez besoin
+      </span>
+    </h1>
+
+    <p class="text-zinc-400 text-sm sm:text-base max-w-2xl mb-8 leading-relaxed font-sans">
+      Donnez-moi ce qui coince, je m'occupe du reste. J'avale vos problèmes indigestes pour en faire des outils qui tournent comme une horloge suisse.
+    </p>
+
+    <div class="flex items-center gap-3">
+      <a href="#projets" class="px-5 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-colors text-sm font-semibold flex items-center gap-2">
+        <i data-lucide="layout-grid" class="w-4 h-4"></i> Explorer les projets
+      </a>
+      <a href="https://github.com/lonsk1" target="_blank" class="px-5 py-2.5 rounded-xl spotlight-card text-zinc-300 hover:text-white transition-colors text-sm font-medium flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg> GitHub
+      </a>
+    </div>
+  </section>
+
+  <!-- Section Projets Unifiée (Visibilité immédiate sans scroll-trigger) -->
+  <section id="projets" class="relative z-10 max-w-6xl mx-auto px-6 py-16">
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between mb-10 gap-6">
+      <div class="max-w-xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2">Projets &amp; Créations</h2>
+        <p class="text-zinc-400 text-xs sm:text-sm">Une collection d'outils, d'idées et de projets pour simplifier le quotidien.</p>
+      </div>
+
+      <!-- Conteneur avec scroll horizontal fluide sur petits écrans (360px-375px) -->
+      <div class="w-full lg:w-auto overflow-x-auto no-scrollbar py-1" style="-webkit-overflow-scrolling: touch;">
+        <div class="inline-flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-zinc-900/90 border border-zinc-800 text-[11px] sm:text-xs backdrop-blur-md whitespace-nowrap shrink-0">
+          <button onclick="filterCategory('all')" class="f-btn px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium bg-blue-600 text-white transition-colors shrink-0" data-c="all">
+            Tous
+          </button>
+          <button onclick="filterCategory('outils')" class="f-btn px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium text-zinc-400 hover:text-white transition-colors shrink-0" data-c="outils">
+            Automatisation &amp; Outils
+          </button>
+          <button onclick="filterCategory('apps')" class="f-btn px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium text-zinc-400 hover:text-white transition-colors shrink-0" data-c="apps">
+            Web &amp; PWA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille des Cartes (Affichage direct + Spotlight Glow) -->
+    <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </section>
+
+  <!-- MODAL FICHE PRO STYLE STEAM (CORRIGÉE MOBILE & DESKTOP) -->
+  <div id="project-modal" class="hidden fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2.5 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
+    <div id="modal-card" class="spotlight-card relative w-full max-w-3xl my-auto max-h-[92vh] sm:max-h-[88vh] overflow-y-auto custom-scroll rounded-2xl bg-[#0c0e17] border border-zinc-800 shadow-2xl flex flex-col">
+      
+      <!-- Bouton Fermer (accessible et jamais rogné) -->
+      <button onclick="closeModal()" class="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 p-2 rounded-full bg-zinc-900/90 border border-zinc-700/80 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shadow-lg">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Bannière Steam -->
+      <div class="relative min-h-[140px] sm:h-48 w-full p-4 sm:p-6 pt-12 sm:pt-6 flex flex-col justify-end overflow-hidden border-b border-zinc-800 shrink-0">
+        <div id="modal-banner-bg" class="absolute inset-0 bg-gradient-to-tr from-blue-950 via-zinc-900 to-black opacity-90"></div>
+        <div class="relative z-10 pr-10 sm:pr-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1.5 sm:mb-2">
+            <span id="modal-badge" class="px-2.5 py-0.5 rounded text-[10px] sm:text-[11px] font-semibold"></span>
+            <span id="modal-platform" class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] bg-zinc-800/80 border border-zinc-700 text-zinc-300 font-mono"></span>
+          </div>
+          <h3 id="modal-title" class="text-xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight"></h3>
+          <p id="modal-subtitle" class="text-xs sm:text-sm text-zinc-300 font-mono mt-0.5 line-clamp-2 sm:line-clamp-none"></p>
+        </div>
+      </div>
+
+      <!-- Contenu Steam : 2 Colonnes sur PC, 1 Colonne fluide sur Mobile -->
+      <div class="relative z-10 p-4 sm:p-6 grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
+        
+        <!-- Colonne Gauche (2 cols) -->
+        <div class="md:col-span-2 space-y-5 sm:space-y-6">
+          <div>
+            <h4 class="text-zinc-400 font-mono text-xs uppercase tracking-wider mb-2 font-semibold flex items-center gap-2">
+              <i data-lucide="info" class="w-3.5 h-3.5 text-blue-400"></i> À propos du projet
+            </h4>
+            <p id="modal-about" class="text-zinc-300 text-xs sm:text-sm leading-relaxed"></p>
+          </div>
+
+          <div class="rounded-xl p-3.5 sm:p-4 bg-zinc-900/60 border border-zinc-800">
+            <h4 class="text-zinc-300 font-mono text-xs uppercase tracking-wider mb-3 font-semibold flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Fonctionnalités clés
+            </h4>
+            <ul id="modal-features" class="space-y-2 text-xs sm:text-sm text-zinc-300"></ul>
+          </div>
+        </div>
+
+        <!-- Colonne Droite (1 col) -->
+        <div class="space-y-5 sm:space-y-6 border-t md:border-t-0 md:border-l border-zinc-800/80 pt-5 md:pt-0 md:pl-6 text-xs">
+          
+          <div class="grid grid-cols-2 md:grid-cols-1 gap-3">
+            <div>
+              <span class="text-zinc-500 font-mono block text-[10px] sm:text-[11px]">ANNÉE</span>
+              <span id="modal-year" class="text-zinc-200 font-medium"></span>
+            </div>
+            <div>
+              <span class="text-zinc-500 font-mono block text-[10px] sm:text-[11px]">STATUT DU PROJET</span>
+              <span id="modal-status-text" class="text-zinc-200 font-medium"></span>
+            </div>
+            <div class="col-span-2 md:col-span-1">
+              <span class="text-zinc-500 font-mono block text-[10px] sm:text-[11px]">CADRE DE CONCEPTION</span>
+              <span id="modal-type" class="text-zinc-200 font-medium"></span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-zinc-500 font-mono block text-[10px] sm:text-[11px] mb-2">TECHNOLOGIES</span>
+            <div id="modal-tags" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <div class="pt-4 border-t border-zinc-800/80 flex flex-col gap-2.5 pb-2 md:pb-0">
+            <a id="modal-github" href="#" target="_blank" class="w-full px-4 py-2.5 rounded-xl border border-zinc-700 bg-zinc-800/80 hover:bg-zinc-800 text-white font-medium flex items-center justify-center gap-2 transition-colors">
+              <i data-lucide="code-2" class="w-4 h-4"></i> Code Source GitHub
+            </a>
+            <a id="modal-demo" href="#" target="_blank" class="w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-500/20">
+              <i data-lucide="external-link" class="w-4 h-4"></i> Lancer la Démo
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section Expérience, Immersion & Retours Terrain (Avec gs-reveal) -->
+  <section id="retours" class="relative z-10 max-w-5xl mx-auto px-6 py-20 border-t border-zinc-900">
+    <div class="mb-10 text-center gs-reveal">
+      <h2 class="text-2xl font-bold text-white mb-2">Retours & Pratique</h2>
+      <p class="text-zinc-400 text-xs font-sans">Ce que disent les utilisateurs</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      
+      <!-- Retour Distritec (Spotlight Glow + gs-reveal) -->
+      <div class="spotlight-card p-6 rounded-2xl flex flex-col justify-between gs-reveal">
+        <div class="relative z-10">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/20 text-blue-300">Retour Utilisateur</span>
+            <span class="text-xs text-zinc-500">Distritec</span>
+          </div>
+          <p class="text-zinc-300 text-xs italic leading-relaxed mb-6 font-sans">
+            « Fini de jongler entre plusieurs modèles Word et de choisir manuellement chaque page. On saisit simplement les informations et l'outil lance directement les bonnes impressions sans erreur de manipulation. »
+          </p>
+        </div>
+        <div class="relative z-10 flex items-center gap-3 pt-4 border-t border-zinc-800/80">
+          <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-mono text-blue-400 font-bold">AG</div>
+          <div>
+            <h4 class="text-xs font-semibold text-white">Employé Distritec</h4>
+            <p class="text-[11px] text-zinc-500">Technicien de maintenance</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Immersion Studios (Spotlight Glow + gs-reveal) -->
+      <div class="spotlight-card p-6 rounded-2xl flex flex-col justify-between gs-reveal">
+        <div class="relative z-10">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300">Développement & Jeux</span>
+            <span class="text-xs text-zinc-500">Ubisoft & Gameloft</span>
+          </div>
+          <p class="text-zinc-300 text-xs leading-relaxed mb-6 font-sans">
+            Conception de jeux, d'outils pratiques et création de bots. Une plongée dans les environnements de développement pour comprendre comment tournent les projets et en adopter les bonnes pratiques.
+          </p>
+        </div>
+        <div class="relative z-10 flex items-center gap-3 pt-4 border-t border-zinc-800/80">
+          <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-mono text-purple-400 font-bold"><i data-lucide="gamepad-2" class="w-4 h-4"></i></div>
+          <div>
+            <h4 class="text-xs font-semibold text-white">Jeux vidéo</h4>
+            <p class="text-[11px] text-zinc-500">Prototypage et travail en équipe</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Contact Direct (Avec gs-reveal) -->
+  <section id="contact" class="relative z-10 max-w-4xl mx-auto px-6 py-20 text-center">
+    <div class="p-10 rounded-2xl bg-zinc-900/60 border border-zinc-800 backdrop-blur-md gs-reveal">
+      <h2 class="text-2xl font-bold text-white mb-2">Un projet en tête ou un outil à développer ?</h2>
+      <p class="text-zinc-400 text-s max-w-md mx-auto mb-6 font-sans">
+        En quête de nouveaux défis. Parlons du vôtre.
+      </p>
+
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-3">
+        <a href="mailto:lonsk1@proton.me" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2">
+          <i data-lucide="mail" class="w-4 h-4"></i> Envoyer un e-mail
+        </a>
+        <a href="https://github.com/lonsk1" target="_blank" class="px-5 py-2.5 rounded-xl spotlight-card text-zinc-300 hover:text-white transition-colors text-sm font-medium flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg> Mon profil GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="relative z-10 border-t border-white/5 py-8 text-center text-xs text-zinc-500 font-sans">
+    <p>© 2026 Lonsk1 — Tous droits réservés</p>
+  </footer>
+
+  <script>
+    /* ========================================================
+       1. CONTRÔLEUR HAUTE PERFORMANCE DU SCROLL (JANK-FREE)
+       ======================================================== */
+    const nav = document.getElementById('main-nav');
+    const brandLink = document.getElementById('brand-link');
+    const SCROLL_THRESHOLD = 35;
+    let isScrolled = false;
+    let ticking = false;
+
+    function updateNav() {
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (scrollY > SCROLL_THRESHOLD && !isScrolled) {
+        nav.classList.add('scrolled');
+        isScrolled = true;
+      } else if (scrollY <= SCROLL_THRESHOLD && isScrolled) {
+        nav.classList.remove('scrolled');
+        isScrolled = false;
+      }
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateNav);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Exécution initiale
+    updateNav();
+
+    // Clic sur le logo pour remonter tout en haut en douceur
+    brandLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* ========================================================
+       2. CURSEUR MAGNÉTIQUE (SLIDING PILL)
+       ======================================================== */
+    const linksBox = document.getElementById('nav-links-box');
+    const pill = document.getElementById('sliding-pill');
+    const linkItems = linksBox.querySelectorAll('.nav-link-item');
+    const btnContact = document.getElementById('btn-contact');
+
+    linkItems.forEach((link) => {
+      link.addEventListener('mouseenter', () => {
+        const boxRect = linksBox.getBoundingClientRect();
+        const linkRect = link.getBoundingClientRect();
+
+        pill.style.width = `${linkRect.width}px`;
+        pill.style.transform = `translateX(${linkRect.left - boxRect.left}px)`;
+        pill.style.opacity = '1';
+      });
+    });
+
+    // Dès qu'on quitte les liens ou qu'on survole "Me contacter", la pilule s'efface immédiatement
+    linksBox.addEventListener('mouseleave', () => {
+      pill.style.opacity = '0';
+    });
+    btnContact.addEventListener('mouseenter', () => {
+      pill.style.opacity = '0';
+    });
+  </script>
+
+  <!-- Logique JavaScript : Données, Spotlight, Canvas & Animations Scroll -->
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    const projectsData = [
+      {
+        id: 'distritec',
+        title: 'Distritec Logistique',
+        subtitle: 'Automatisation complète des impressions & suivi de commandes',
+        category: 'outils',
+        platform: 'Windows / OS',
+        badge: 'Indisponible',
+        // badge: 'En Production',
+        badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+        bannerGradient: 'from-blue-950 via-zinc-900 to-black',
+        icon: 'file-check',
+        year: '2026',
+        statusText: 'Utilisé au quotidien',
+        type: 'Outil Interne Entreprise',
+        summary: 'Automatisation en un clic des bons de commande et plannings pour agence d’intérim avec traçabilité complète.',
+        about: 'Développé pour éliminer un goulot d’étranglement administratif au sein d’une agence d’intérim. Auparavant, l’équipe devait ouvrir manuellement plusieurs gabarits Word, chercher les pages correspondantes et lancer les impressions individuellement.',
+        features: [
+          'Génération et fusion automatique des bons de commande et fiches de disponibilité.',
+          'Envoi groupé vers le spool d’impression du système en un seul clic.',
+          'Système de logs horodatés pour tracer et certifier l’historique des impressions.',
+          'Interface sans fioritures pensée pour un usage bureautique immédiat.'
+        ],
+        tags: ['Python', 'Office Automation', 'OS Spooler', 'Logs JSON'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      },
+      {
+        id: 'servlocal',
+        title: 'ServLocal',
+        subtitle: 'Partage de fichiers P2P en réseau local & messagerie',
+        category: 'outils',
+        platform: 'Multi-OS / LAN',
+        badge: 'Indisponible',
+        // badge: 'Opérationnel',
+        badgeColor: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30',
+        bannerGradient: 'from-cyan-950 via-zinc-900 to-black',
+        icon: 'network',
+        year: '2025',
+        statusText: 'Fonctionnel & Testé',
+        type: 'Utilitaire Réseau',
+        summary: 'Transfert rapide de machine à machine sur réseau local via navigateur, sans clé USB ni transit cloud.',
+        about: 'Conçu pour répondre à un besoin récurrent : s’échanger des fichiers volumineux ou du code entre machines sur le même réseau sans clé USB ni services cloud tiers.',
+        features: [
+          'Dépôt et téléchargement instantané en glisser-déposer via interface web locale.',
+          'Messagerie de chat intégrée (messages privés et salon global sur le LAN).',
+          'Aucune connexion Internet requise, fonctionnement autonome sur le sous-réseau.',
+          'Empreinte mémoire minime avec serveur léger.'
+        ],
+        tags: ['Node.js', 'WebSockets', 'P2P Local', 'HTTP Streaming'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      },
+      {
+        id: 'boowks',
+        title: 'Boowks',
+        subtitle: 'Liseuse d’ebooks universelle & offline-first',
+        category: 'apps',
+        platform: 'PWA / Mobile & Desktop',
+        badge: 'Indisponible',
+        // badge: 'En Développement Actif',
+        badgeColor: 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30',
+        bannerGradient: 'from-indigo-950 via-zinc-900 to-black',
+        icon: 'book-open',
+        year: '2026',
+        statusText: 'Version Bêta',
+        type: 'Application Web Progressive',
+        summary: 'Lecteur d’ebooks (ePub, PDF) hors-ligne avec surlignage persistant, traduction et stockage local.',
+        about: 'Une application de lecture sans distractions, libre et respectueuse des données. Boowks permet d’importer n’importe quel ePub ou PDF et de le lire sur n’importe quel appareil.',
+        features: [
+          'Stockage des livres directement dans le navigateur via IndexedDB pour une lecture 100% hors-ligne.',
+          'Système de surlignage de citations avec mémorisation des coordonnées exactes.',
+          'Module de traduction rapide de passages intégrée pour les ouvrages étrangers.',
+          'Design fluide pensé pour limiter la fatigue oculaire.'
+        ],
+        tags: ['React', 'IndexedDB', 'PWA', 'EPUB Reader API'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      },
+      {
+        id: 'dooblens',
+        title: 'Dooblens',
+        subtitle: 'Détecteur d’empreintes et déduplication d’images',
+        category: 'outils',
+        platform: 'CLI / Desktop',
+        badge: 'Indisponible',
+        // badge: 'Opérationnel',
+        badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+        bannerGradient: 'from-amber-950 via-zinc-900 to-black',
+        icon: 'copy',
+        year: '2025',
+        statusText: 'Stable',
+        type: 'Outil Algorithmique',
+        summary: 'Analyse algorithmique pour repérer et nettoyer les photos en double sans suppression accidentelle.',
+        about: 'Créé pour automatiser le tri de disques saturés d’images. Les doublons visuels (photos redimensionnées ou compressées différemment) échappent aux simples tris par nom.',
+        features: [
+          'Plusieurs modes d’analyse : comparaison d’un fichier avec un dossier entier, ou analyse croisée entre répertoires.',
+          'Calcul d’empreinte de hachage perceptuel pour repérer les similarités visuelles réelles.',
+          'Rapport clair des doublons détectés avant toute action de purge pour éviter les pertes accidentelles.',
+          'Traitement par lots optimisé pour scanner des milliers de clichés rapidement.'
+        ],
+        tags: ['Python', 'Image Hashing', 'Traitement de données', 'Algorithmes'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      },
+      {
+        id: 'lunaar',
+        title: 'Lunaar',
+        subtitle: 'Suivi de rentabilité & motivation en temps réel',
+        category: 'apps',
+        platform: 'PWA Web & Mobile',
+        badge: 'PWA En Production',
+        badgeColor: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+        bannerGradient: 'from-purple-950 via-zinc-900 to-black',
+        icon: 'coins',
+        year: '2026',
+        statusText: 'Prêt à l’emploi',
+        type: 'Application Web',
+        summary: 'Compteur de revenus en temps réel au fil des heures travaillées selon le taux horaire.',
+        about: 'Une PWA conçue pour rendre l’effort au travail immédiatement tangible. Au lieu d’attendre la fiche de paie mensuelle, l’application affiche une progression financière dynamique à la seconde près.',
+        features: [
+          'Calcul au dixième de centime basé sur le taux horaire net ou brut.',
+          'Prise en compte des congés payés, jours fériés et heures supplémentaires.',
+          'Mode plein écran minimaliste pour rester actif sur le bureau ou un smartphone.',
+          'Données 100% stockées localement, aucune information financière ne quitte le navigateur.'
+        ],
+        tags: ['React', 'TypeScript', 'Tailwind CSS', 'PWA'],
+        github: 'https://github.com/lonsk1/lunaar',
+        demo: 'https://lunaar-three.vercel.app/'
+      },
+      {
+        id: 'sybaris',
+        title: 'Sybaris',
+        subtitle: 'Planification d’entraînements & suivi forme',
+        category: 'apps',
+        platform: 'PWA Mobile & Desktop',
+        badge: 'PWA En Production',
+        badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30',
+        bannerGradient: 'from-emerald-950 via-zinc-900 to-black',
+        icon: 'activity',
+        year: '2026',
+        statusText: 'Prêt à l’emploi',
+        type: 'Application Santé',
+        summary: 'Planification d’exercices physiques, suivi d’hydratation et carnet de nutrition sans abonnement.',
+        about: 'Conçue pour remplacer les applications de musculation encombrées de publicités. L’objectif : une interface rapide à dégainer entre deux séries en salle.',
+        features: [
+          'Programmation hebdomadaire modulable par groupes musculaires.',
+          'Validation en un tap des séries et poids réalisés.',
+          'Suivi d’hydratation journalier avec jauge visuelle.',
+          'Suggestions d’idées repas et macronutriments adaptés à la séance du jour.'
+        ],
+        tags: ['React', 'Mobile First', 'PWA', 'State Management'],
+        github: 'https://github.com/lonsk1/sybaris',
+        demo: 'https://sybaris.vercel.app/'
+      },
+      {
+        id: 'forensique',
+        title: 'Forensique',
+        subtitle: 'Effacement définitif & sécurisé de supports de stockage',
+        category: 'outils',
+        platform: 'Linux / Stockage',
+        badge: 'Indisponible',
+        // badge: 'R&D / Sécurité',
+        badgeColor: 'bg-rose-500/20 text-rose-300 border border-rose-500/30',
+        bannerGradient: 'from-rose-950 via-zinc-900 to-black',
+        icon: 'shield-alert',
+        year: '2025',
+        statusText: 'En cours de fiabilisation',
+        type: 'Utilitaire Sécurité Système',
+        summary: 'Effacement définitif et sécurisé de clés USB et disques durs empêchant la récupération de données sensibles.',
+        about: 'Outil bas niveau conçu pour neutraliser définitivement les données sur les supports amovibles afin d’empêcher toute restauration par analyse forensique.',
+        features: [
+          'Écriture de motifs aléatoires et passes multiples conformes aux normes d’assainissement.',
+          'Vérification sectorielle post-effacement.',
+          'Avertissements stricts pour éviter les sélections accidentelles de disques systèmes.',
+          'Script direct et transparent pour auditer chaque commande d’écriture brute.'
+        ],
+        tags: ['Bas Niveau', 'Stockage & I/O', 'Linux', 'Sécurité'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      },
+      {
+        id: 'prestigemc',
+        title: 'PrestigeMC',
+        subtitle: 'Launcher alternatif léger et respectueux de la vie privée',
+        category: 'outils',
+        platform: 'Desktop / Multi-OS',
+        badge: 'Indisponible',
+        // badge: 'Prototype Avancé',
+        badgeColor: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+        bannerGradient: 'from-blue-950 via-zinc-900 to-black',
+        icon: 'gamepad-2',
+        year: '2026',
+        statusText: 'En développement',
+        type: 'Application Desktop',
+        summary: 'Lanceur Minecraft moderne, rapide et garanti sans spyware ni télémétrie superflue.',
+        about: 'Développé pour offrir une alternative épurée aux launchers lourds et intrusifs. PrestigeMC vise un démarrage immédiat et une consommation minimale de RAM.',
+        features: [
+          'Gestion des profils et versions de jeu en mode hors-ligne.',
+          'Architecture prête pour la liaison sécurisée avec comptes officiels.',
+          'Démarrage ultra-rapide sans pop-ups publicitaires ni traceurs.',
+          'Interface sombre soignée inspirée des clients modernes.'
+        ],
+        tags: ['Desktop UI', 'Game Launcher', 'Gestion Processus', 'Sécurité'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      },
+      {
+        id: 'macaque',
+        title: 'MacAque',
+        subtitle: 'Automatisation & ergonomie macOS sous Debian Linux',
+        category: 'outils',
+        platform: 'Debian 13 / GNOME',
+        badge: 'Indisponible',
+        // badge: 'Script Opérationnel',
+        badgeColor: 'bg-zinc-500/20 text-zinc-300 border border-zinc-500/30',
+        bannerGradient: 'from-zinc-900 via-zinc-950 to-black',
+        icon: 'terminal',
+        year: '2025',
+        statusText: 'Stable pour usage perso',
+        type: 'Automatisation Bash / Linux',
+        summary: 'Script de configuration pour reproduire l’ergonomie de macOS sous Debian sans la télémétrie.',
+        about: 'Développé pour obtenir le confort visuel et les raccourcis clés de macOS tout en conservant la liberté et la légèreté d’un système Debian Linux.',
+        features: [
+          'Déploiement en une seule commande de l’environnement visuel et des extensions adaptées.',
+          'Configuration des raccourcis clavier et disposition du dock.',
+          'Zéro télémétrie, respect total de la vie privée.',
+          'Script documenté permettant de restaurer ou modifier la configuration à tout moment.'
+        ],
+        tags: ['Bash', 'Debian Linux', 'GNOME', 'Automatisation'],
+        github: 'https://github.com/lonsk1',
+        demo: null
+      }
+    ];
+
+    // Rendu direct des cartes de la galerie (sans délai ni masquage)
+    const grid = document.getElementById('projects-grid');
+
+    function renderCards(category = 'all') {
+      grid.innerHTML = '';
+      const filtered = category === 'all' ? projectsData : projectsData.filter(p => p.category === category);
+
+      filtered.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'spotlight-card rounded-2xl overflow-hidden flex flex-col cursor-pointer group';
+        card.onclick = () => openModal(p.id);
+
+        card.innerHTML = `
+          <div class="relative z-10 h-36 bg-gradient-to-br ${p.bannerGradient} p-5 border-b border-white/5 flex flex-col justify-between">
+            <div class="flex justify-between items-center">
+              <span class="px-2.5 py-1 rounded-md text-[10px] font-semibold ${p.badgeColor}">${p.badge}</span>
+              <i data-lucide="${p.icon}" class="w-5 h-5 text-zinc-300 group-hover:text-blue-400 transition-colors"></i>
+            </div>
+            <div>
+              <span class="text-xs text-zinc-400 font-mono">${p.platform}</span>
+              <h3 class="text-xl font-bold text-white group-hover:text-blue-300 transition-colors">${p.title}</h3>
+            </div>
+          </div>
+          <div class="relative z-10 p-6 flex-1 flex flex-col justify-between">
+            <p class="text-zinc-400 text-xs sm:text-sm leading-relaxed mb-6">${p.summary}</p>
+            <div class="pt-4 border-t border-zinc-800 flex justify-between items-center text-xs">
+              <span class="text-blue-400 group-hover:text-blue-300 font-semibold flex items-center gap-1">
+                Fiche complète <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </span>
+              <span class="text-zinc-500 font-mono text-[11px]">${p.year}</span>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      initSpotlightEffect();
+      lucide.createIcons();
+    }
+
+    // Filtres
+    function filterCategory(cat) {
+      document.querySelectorAll('.f-btn').forEach(btn => {
+        if (btn.getAttribute('data-c') === cat) {
+          btn.classList.add('bg-blue-600', 'text-white');
+          btn.classList.remove('text-zinc-400');
+        } else {
+          btn.classList.remove('bg-blue-600', 'text-white');
+          btn.classList.add('text-zinc-400');
+        }
+      });
+      renderCards(cat);
+    }
+
+    // Modal Steam Logic
+    function openModal(id) {
+      const p = projectsData.find(item => item.id === id);
+      if (!p) return;
+
+      document.getElementById('modal-title').textContent = p.title;
+      document.getElementById('modal-subtitle').textContent = p.subtitle;
+      document.getElementById('modal-year').textContent = p.year;
+      document.getElementById('modal-platform').textContent = p.platform;
+      document.getElementById('modal-status-text').textContent = p.statusText;
+      document.getElementById('modal-type').textContent = p.type;
+
+      const badge = document.getElementById('modal-badge');
+      badge.textContent = p.badge;
+      badge.className = `px-2.5 py-0.5 rounded text-[11px] font-semibold ${p.badgeColor}`;
+
+      const bg = document.getElementById('modal-banner-bg');
+      bg.className = `absolute inset-0 bg-gradient-to-tr ${p.bannerGradient} opacity-90`;
+
+      document.getElementById('modal-about').textContent = p.about;
+
+      const featContainer = document.getElementById('modal-features');
+      featContainer.innerHTML = p.features.map(f => `
+        <li class="flex items-start gap-2">
+          <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+          <span>${f}</span>
+        </li>
+      `).join('');
+
+      const tagsContainer = document.getElementById('modal-tags');
+      tagsContainer.innerHTML = p.tags.map(t => `<span class="px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/60 text-zinc-300 text-[11px] font-mono">${t}</span>`).join('');
+
+      const ghBtn = document.getElementById('modal-github');
+      if (p.github) {
+        ghBtn.href = p.github;
+        ghBtn.style.display = 'inline-flex';
+      } else {
+        ghBtn.style.display = 'none';
+      }
+
+      const demoBtn = document.getElementById('modal-demo');
+      if (p.demo) {
+        demoBtn.href = p.demo;
+        demoBtn.style.display = 'inline-flex';
+      } else {
+        demoBtn.style.display = 'none';
+      }
+
+      document.getElementById('project-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById('project-modal').classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+    document.getElementById('project-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'project-modal') closeModal();
+    });
+
+    // Spotlight Glow
+    function initSpotlightEffect() {
+      document.querySelectorAll('.spotlight-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        });
+      });
+    }
+
+    // Animation au défilement réservée aux avis & contact
+    function initScrollAnimations() {
+      gsap.utils.toArray('.gs-reveal').forEach(element => {
+        gsap.fromTo(element, 
+          { opacity: 0, y: 35 },
+          {
+            scrollTrigger: {
+              trigger: element,
+              start: "top 85%",
+              toggleActions: "play none none none"
+            },
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power2.out"
+          }
+        );
+      });
+    }
+
+    // Moteur Canvas : Étoiles à scintillement & Étoiles filantes
+    const canvas = document.getElementById('space-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      createStars();
+    });
+
+    let stars = [];
+    let shootingStars = [];
+    let globalFade = 0; // Gère le fondu d'entrée doux au chargement / refresh
+
+    function createStars() {
+      stars = [];
+      const count = Math.floor((width * height) / 4500);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          vx: (Math.random() - 0.5) * 0.12, // Vitesse de déplacement horizontale
+          vy: (Math.random() - 0.5) * 0.12, // Vitesse de déplacement verticale
+          size: Math.random() * 1.4 + 0.3,
+          baseAlpha: Math.random() * 0.7 + 0.3,
+          twinkleSpeed: Math.random() * 0.03 + 0.008,
+          twinkleOffset: Math.random() * Math.PI * 2,
+          hasCrossGlow: Math.random() > 0.88
+        });
+      }
+    }
+
+    function addShootingStar() {
+      // Configuration rarifiée : maximum 1 à la fois et probabilité à < 0.010
+      if (shootingStars.length < 1 && Math.random() < 0.010) {
+        const startX = Math.random() * width;
+        const startY = Math.random() * (height * 0.4);
+        const angle = (Math.PI / 4) + (Math.random() - 0.5) * 0.4;
+        const speed = Math.random() * 8 + 7;
+        shootingStars.push({
+          x: startX,
+          y: startY,
+          dx: Math.cos(angle) * speed,
+          dy: Math.sin(angle) * speed,
+          length: Math.random() * 70 + 40,
+          life: 1,
+          decay: Math.random() * 0.015 + 0.01
+        });
+      }
+    }
+
+    let time = 0;
+    function renderSpace() {
+      ctx.clearRect(0, 0, width, height);
+      time += 1;
+
+      // Fondu progressif au refresh (monte de 0 à 1 en douceur)
+      if (globalFade < 1) {
+        globalFade += 0.015;
+      }
+
+      // Rendu + déplacement fluide des étoiles
+      stars.forEach(s => {
+        s.x += s.vx;
+        s.y += s.vy;
+
+        // Réapparition de l'autre côté de l'écran
+        if (s.x < 0) s.x = width;
+        if (s.x > width) s.x = 0;
+        if (s.y < 0) s.y = height;
+        if (s.y > height) s.y = 0;
+
+        const alpha = (s.baseAlpha + Math.sin(time * s.twinkleSpeed + s.twinkleOffset) * 0.35) * globalFade;
+        const finalAlpha = Math.max(0, Math.min(1, alpha));
+
+        const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+        const particleCount = isMobile ? Math.floor((width * height) / 9000) : Math.floor((width * height) / 4500);
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${finalAlpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (s.hasCrossGlow && finalAlpha > 0.65) {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${finalAlpha * 0.4})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(s.x - s.size * 3.5, s.y);
+          ctx.lineTo(s.x + s.size * 3.5, s.y);
+          ctx.moveTo(s.x, s.y - s.size * 3.5);
+          ctx.lineTo(s.x, s.y + s.size * 3.5);
+          ctx.stroke();
+        }
+      });
+
+      // Rendu des étoiles filantes
+      addShootingStar();
+      for (let i = shootingStars.length - 1; i >= 0; i--) {
+        const ss = shootingStars[i];
+        ss.x += ss.dx;
+        ss.y += ss.dy;
+        ss.life -= ss.decay;
+
+        if (ss.life <= 0 || ss.x > width || ss.y > height) {
+          shootingStars.splice(i, 1);
+          continue;
+        }
+
+        const tailX = ss.x - (ss.dx / Math.hypot(ss.dx, ss.dy)) * ss.length;
+        const tailY = ss.y - (ss.dy / Math.hypot(ss.dx, ss.dy)) * ss.length;
+
+        const grad = ctx.createLinearGradient(tailX, tailY, ss.x, ss.y);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+        grad.addColorStop(0.7, `rgba(147, 197, 253, ${ss.life * 0.6 * globalFade})`);
+        grad.addColorStop(1, `rgba(255, 255, 255, ${ss.life * globalFade})`);
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(ss.x, ss.y);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(renderSpace);
+    }
+
+    // Initialisation
+    createStars();
+    renderSpace();
+    renderCards();
+    initSpotlightEffect();
+    initScrollAnimations();
+  </script>
+</body>
+</html>
